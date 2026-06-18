@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. Le Reverse Proxy Sécurisé
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - soc_network
+
+  # 2. L'Application Web (Flask + Gunicorn) avec Auto-Heal
+  dashboard:
+    build: .
+    container_name: flask_soc_app
+    expose:
+      - "5000"
+    command: gunicorn -w 4 -b 0.0.0.0:5000 Dashboard:app
+    volumes:
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /var/log/fail2ban.log:/var/log/fail2ban.log:ro
+      - /var/log/suricata/fast.log:/var/log/suricata/fast.log:ro
+      - /var/log/ufw.log:/var/log/ufw.log:ro
+      - /var/log/ufw_real_status.txt:/var/log/ufw_real_status.txt:ro
+    environment:
+      - FLASK_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - soc_network # Connecte Flask au même réseau sécurisé
+
+networks:
+  soc_network:
+    driver: bridge

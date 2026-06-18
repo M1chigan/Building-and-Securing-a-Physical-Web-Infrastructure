@@ -1,0 +1,1 @@
+To use attack_script, need to add Hydra.exe and his dependencies into this folder. 

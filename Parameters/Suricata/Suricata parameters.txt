@@ -1,0 +1,9 @@
+#Add this rule to /etc/suricata/rules/local.rules to detect NMAP
+
+alert tcp any any -> $HOME_NET any (msg:"NMAP - NULL scan detecte"; flags:0; sid:1000010; rev:1; classtype:network-scan;)
+alert tcp any any -> $HOME_NET any (msg:"NMAP - FIN scan detecte"; flags:F,FSRPAU; sid:1000011; rev:1; classtype:network-scan;)
+alert tcp any any -> $HOME_NET any (msg:"NMAP - XMAS scan detecte"; flags:FPU,FSRPAU; sid:1000012; rev:1; classtype:network-scan;)
+alert tcp any any -> $HOME_NET any (msg:"Possible scan de ports (multiples SYN)"; flags:S; threshold:type both, track by_src, count 15, seconds 10; sid:1000013; rev:1; classtype:network-scan;)
+alert icmp any any -> $HOME_NET any (msg:"Possible ping sweep Nmap"; itype:8; threshold:type both, track by_src, count 5, seconds 10; sid:1000014; rev:1; classtype:network-scan;)
+
+
